@@ -2,7 +2,7 @@
 
 ---
 
-# ytpod: Your YouTube Podcast Downloader
+# ytpod: make youtube channel as a podcast
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![Python Version](https://img.shields.io/badge/python-3.11-blue)

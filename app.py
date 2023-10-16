@@ -4,6 +4,7 @@ import rss
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import datetime
+import os
 
 app = Flask(__name__)
 
@@ -11,16 +12,20 @@ def scheduled_task():
     dec.download_episodes()  # Scarica gli episodi
     rss.update_feed()  # Aggiorna il feed RSS
 
-@app.route('/feed.xml')
-def serve_feed():
-    return send_from_directory('.', 'feed.xml')
+@app.route('/<channel>/feed.xml')
+def serve_feed(channel):
+    return send_from_directory(os.path.join('output', channel), 'feed.xml')
 
-@app.route('/output/<filename>')
-def serve_file(filename):
+@app.route('/<channel>/<filename>')
+def serve_file(channel, filename):
     print(f"Serving file: {filename}")
-    return send_from_directory('output', filename, as_attachment=True, mimetype='audio/mp3')
+    return send_from_directory(os.path.join('output', channel), filename, as_attachment=True, mimetype='audio/mp3')
 
 if __name__ == '__main__':
+    # Esegui il task una volta all'avvio
+    print("Running initial task...")
+    scheduled_task()
+    
     # Inizializza lo scheduler in background
     scheduler = BackgroundScheduler()
 

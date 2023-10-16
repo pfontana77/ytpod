@@ -165,3 +165,5 @@ cython_debug/
 output/*
 data/*
 feed.xml
+webserver.py
+downloaded.txt

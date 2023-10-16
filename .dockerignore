@@ -30,7 +30,10 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
-**/output
+**/data
+output/*
 LICENSE
 README.md
 feed.xml
+webserver.py
+downloaded.txt

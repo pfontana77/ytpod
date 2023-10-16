@@ -1,18 +1,20 @@
 import yt_dlp
 
 def download_episodes():
-    CHANNEL_URL = "https://www.youtube.com/channel/UCgG9BnqkGnU-ouYa5eAOdEw"
+    # Legge gli URL dei canali dal file di configurazione
+    with open('channel_lists.cfg', 'r') as file:
+        channels = [line.strip() for line in file]
 
     ydl_opts = {
         "format": "bestaudio",
         "extractaudio": True,
         "audioformat": "bestaudio",
-        "outtmpl": "output/%(title)s.%(ext)s",
+        "outtmpl": "output/%(uploader)s/%(title)s.%(ext)s",
         "ignoreerrors": True,
         "verbose": True,
-        #"max_downloads": 5,
-        #"noplaylist": True,
         "playlistend": 5,
+        "noplaylist": True,
+        "download_archive": "downloaded.txt",
         "postprocessors": [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -20,15 +22,15 @@ def download_episodes():
         }],
     }
 
-    try:
-        print("Starting download...")
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([CHANNEL_URL])
-        print("Download completed")
-    except yt_dlp.utils.DownloadError as e:
-        print("Download completed or reached the maximum limit")
+    for channel_url in channels:
+        try:
+            print(f"Starting download for channel: {channel_url}")
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([channel_url])
+            print("Download completed for channel: {channel_url}")
+        except yt_dlp.utils.DownloadError as e:
+            print(f"Download completed or reached the maximum limit for channel: {channel_url}")
 
-# Call the function
 if __name__ == "__main__":
     print("Executing main script...")
     download_episodes()
