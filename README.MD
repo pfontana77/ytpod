@@ -27,6 +27,8 @@
 
 `ytpod` is a Python application that allows you to download episodes from a YouTube channel and manage an RSS feed through a web server. The application utilizes Flask and other Python libraries to provide a smooth and functional user experience.
 
+It's still in early alpha and not intended to be used as is.
+
 ---
 
 ## Features
@@ -86,8 +88,3 @@ If you wish to contribute to the project, feel free to open a Pull Request or re
 ## License
 
 This project is distributed under the MIT License. For more details, please refer to the `LICENSE` file.
-
----
-
-### Summary
-I've created an English version of the README.MD file for the "ytpod" project following GitHub's standard guidelines. The file includes sections like Description, Features, Installation, Usage, Contributing, and License. This README.MD is designed to be visually appealing and informative.
