@@ -164,6 +164,9 @@ cython_debug/
 .vscode/
 output/*
 data/*
+test/
 feed.xml
 webserver.py
 downloaded.txt
+app.log
+keepalive.py

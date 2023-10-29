@@ -1,3 +1,5 @@
 Flask
 APScheduler
 yt_dlp
+g4f
+gtts

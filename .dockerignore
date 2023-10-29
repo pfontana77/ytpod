@@ -31,9 +31,12 @@
 **/secrets.dev.yaml
 **/values.dev.yaml
 **/data
-output/*
+#output/*
+**/test
 LICENSE
 README.md
 feed.xml
 webserver.py
 downloaded.txt
+app.log
+keepalive.*
