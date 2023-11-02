@@ -2,7 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 
 # Base URL for the podcast links
-#BASE_URL = 'http://localhost:80/'
+BASE_URL = 'http://localhost:80/'
 
 def update_feed():
     print("Updating RSS feeds...")
