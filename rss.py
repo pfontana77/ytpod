@@ -1,8 +1,9 @@
 import os
 import xml.etree.ElementTree as ET
+import logging
 
 # Base URL for the podcast links
-#BASE_URL = 'http://localhost:8080/'
+BASE_URL = 'http://localhost:8080/'
 
 # Ottieni una referenza al logger 'app_logger'
 app_logger = logging.getLogger("app_logger")
