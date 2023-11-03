@@ -2,8 +2,10 @@ import os
 import xml.etree.ElementTree as ET
 
 # Base URL for the podcast links
-BASE_URL = "http://localhost:8080/"
+#BASE_URL = 'http://localhost:8080/'
 
+# Ottieni una referenza al logger 'app_logger'
+app_logger = logging.getLogger("app_logger")
 
 def update_feed():
     print("Updating RSS feeds...")
@@ -12,7 +14,7 @@ def update_feed():
     for channel_name in os.listdir("output"):
         channel_dir = os.path.join("output", channel_name)
         if os.path.isdir(channel_dir):
-            print(f"Processing channel: {channel_name}")
+            app_logger.info(f"Processing channel: {channel_name}")
 
             # Create the root element and the channel
             rss = ET.Element("rss", version="2.0")
@@ -23,10 +25,10 @@ def update_feed():
             ).text = f"{channel_name} Audio Podcast from YT"
 
             # Scan the channel directory for MP3 files
-            print(f"Scanning '{channel_dir}' folder for MP3 files...")
+            app_logger.info(f"Scanning '{channel_dir}' folder for MP3 files...")
             for filename in os.listdir(channel_dir):
                 if filename.endswith(".mp3"):
-                    print(f"Found MP3 file: {filename}")
+                    app_logger.info(f"Found MP3 file: {filename}")
                     item = ET.SubElement(channel, "item")
                     ET.SubElement(item, "title").text = filename
                     # Utilizza la costante BASE_URL quando costruisci l'URL
@@ -39,7 +41,7 @@ def update_feed():
 
             # Save the modified RSS feed to a file
             rss_file_path = os.path.join(channel_dir, "feed.xml")
-            print(f"Saving the modified RSS feed to '{rss_file_path}'...")
+            app_logger.info(f"Saving the modified RSS feed to '{rss_file_path}'...")
             tree = ET.ElementTree(rss)
             tree.write(rss_file_path)
 
