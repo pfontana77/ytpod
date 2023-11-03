@@ -3,65 +3,51 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import datetime
 import os
-import logging
 import threading
 import subprocess
 import download_episodes_from_channel as dec
 import rss
-
+import log_config
+import logging
 
 # Configura il sistema di log
-logger = logging.getLogger("app_logger")
-logger.setLevel(logging.ERROR)  # Imposta il livello di log globale a ERROR
+log_config.setup_logger("werkzeug", "flask.log", logging.DEBUG)  # Logger per Flask
+log_config.setup_logger(
+    "app_logger", "app.log", logging.INFO
+)  # Logger per il tuo codice
 
-# Crea un handler per scrivere i log su file
-file_handler = logging.FileHandler("app.log")
-file_handler.setLevel(
-    logging.ERROR
-)  # Imposta il livello di log per il file handler a ERROR
+# Ottieni i logger configurati
+flask_logger = logging.getLogger("werkzeug")  # Logger per Flask
+app_logger = logging.getLogger("app_logger")  # Logger per il tuo codice
 
-# Crea un handler per scrivere i log sulla console
-console_handler = logging.StreamHandler()
-console_handler.setLevel(
-    logging.ERROR
-)  # Imposta il livello di log per il console handler a ERROR
-
-# Crea un formatter e lo assegna ad entrambi gli handler
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
-# Aggiungi gli handler al logger
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
+# Crea un'istanza dell'applicazione Flask
 app = Flask(__name__)
+
 # Crea un lock globale
 task_lock = threading.Lock()
 
 
 def scheduled_task():
-    # Tenta di acquisire il lock, restituisce False se il lock è già acquisito
     if not task_lock.acquire(blocking=False):
-        print("Un altro task è in esecuzione. Questo task sarà ignorato.")
+        app_logger.warning("Un altro task è in esecuzione. Questo task sarà ignorato.")
         return
 
     try:
-        # Altrimenti, esegui il task
-        print("Nessun altro task in esecuzione. Esecuzione del task programmato...")
-        dec.download_episodes()  # Scarica gli episodi
-        rss.update_feed()  # Aggiorna il feed RSS
+        app_logger.info(
+            "Nessun altro task in esecuzione. Esecuzione del task programmato..."
+        )
+        dec.download_episodes()
+        rss.update_feed()
     finally:
-        # Rilascia il lock alla fine del task
         task_lock.release()
 
 
 def delete_downloaded_file():
     try:
         os.remove("downloaded.txt")
-        print("File downloaded.txt deleted.")
+        app_logger.info("File downloaded.txt deleted.")
     except FileNotFoundError:
-        print("File downloaded.txt not found.")
+        app_logger.warning("File downloaded.txt not found.")
 
 
 def append_to_channel_lists(text):
@@ -69,10 +55,10 @@ def append_to_channel_lists(text):
     try:
         with open(file_name, "a") as f:
             f.write(f"\n{text}")
-            return True  # Restituisce True se l'append è riuscito
+            return True
     except Exception as e:
-        print(f"Errore durante l'append al file {file_name}: {str(e)}")
-        return False  # Restituisce False se si è verificato un errore
+        app_logger.error(f"Errore durante l'append al file {file_name}: {str(e)}")
+        return False
 
 
 def print_channel_list():
@@ -86,10 +72,10 @@ def print_channel_list():
                 else:
                     channel_list += f"{line_number}. (riga vuota)\n"
     except FileNotFoundError as e:
-        logging.error(f"File 'channel_lists.cfg' non trovato: {str(e)}")
+        app_logger.error(f"File 'channel_lists.cfg' non trovato: {str(e)}")
         channel_list = "Il file channel_lists.cfg non è stato trovato."
     except Exception as e:
-        logging.error(
+        app_logger.error(
             f"Errore durante la lettura del file 'channel_lists.cfg': {str(e)}"
         )
         channel_list = f"Errore durante la lettura del file channel_lists.cfg: {str(e)}"
@@ -97,7 +83,7 @@ def print_channel_list():
 
 
 def upgrade_g4f():
-    print(f"Upgrading g4f: ")
+    app_logger.info("Upgrading g4f: ")
     try:
         result = subprocess.run(
             ["pip", "install", "--upgrade", "g4f"],
@@ -105,10 +91,9 @@ def upgrade_g4f():
             text=True,
             capture_output=True,
         )
-        print(f"Upgrade successful: {result.stdout}")
+        app_logger.info(f"Upgrade successful: {result.stdout}")
     except subprocess.CalledProcessError as e:
-        print(f"Upgrade failed: {e.stderr}")
-        logging.error(f"Upgrade failed: {e.stderr}")
+        app_logger.error(f"Upgrade failed: {e.stderr}")
 
 
 @app.route("/append_to_channel_lists/<string:text>")
@@ -134,11 +119,11 @@ def view_log():
         return Response(log_content, mimetype="text/plain")
     except FileNotFoundError as e:
         message = f"File app.log non trovato: {str(e)}"
-        logging.error(message)
+        app_logger.error(message)
         return message, 404
     except Exception as e:
         message = f"Errore durante la lettura del file app.log: {str(e)}"
-        logging.error(message)
+        app_logger.error(message)
         return message, 500
 
 
@@ -155,13 +140,20 @@ def serve_feed(channel):
 
 @app.route("/<channel>/<filename>")
 def serve_file(channel, filename):
-    print(f"Serving file: {filename}")
-    return send_from_directory(
-        os.path.join("output", channel),
-        filename,
-        as_attachment=False,
-        mimetype="audio/mp3",
-    )
+    try:
+        app_logger.info(f"Serving file: {filename}")
+        return send_from_directory(
+            os.path.join("output", channel),
+            filename,
+            as_attachment=False,
+            mimetype="audio/mp3",
+        )
+    except FileNotFoundError as e:
+        app_logger.error(f"File not found: {str(e)}")
+        return f"File {filename} not found", 404
+    except Exception as e:
+        app_logger.error(f"An error occurred while serving the file: {str(e)}")
+        return f"An error occurred: {str(e)}", 500
 
 
 @app.route("/trigger_scheduled_task")
@@ -170,7 +162,7 @@ def trigger_scheduled_task_route():
         scheduled_task()
         return "Scheduled task triggered successfully."
     except Exception as e:
-        logging.error(
+        app_logger.error(
             f"Errore durante l'esecuzione manuale del task programmato: {str(e)}"
         )
         return (
@@ -185,15 +177,16 @@ if __name__ == "__main__":
 
     scheduler = BackgroundScheduler()
     now = datetime.datetime.now()
-    print(f"Current time: {now}")
+    app_logger.info(f"Current time: {now}")
     first_run = datetime.datetime(now.year, now.month, now.day, 23, 50)
-    print(f"First run time: {first_run}")
+    app_logger.info(f"First run time: {first_run}")
     trigger = IntervalTrigger(hours=2, start_date=first_run)
-    print(f"Trigger set every 2 hours starting from: {first_run}")
+    app_logger.info(f"Trigger set every 2 hours starting from: {first_run}")
     scheduler.add_job(scheduled_task, trigger, max_instances=1)
-    print("Podcast task added to the scheduler")
-    print("Scheduing daily upgrade of g4f...")
+    app_logger.info("Podcast task added to the scheduler")
+    app_logger.info("Scheduing daily upgrade of g4f...")
     scheduler.add_job(upgrade_g4f, "cron", hour=0, minute=50, id="upgrade_g4f")
-    print("Daily g4f upgrade added to the scheduler")
-    print("Starting Flask app on host='0.0.0.0', port=80")
-    app.run(host="0.0.0.0", port=80)
+    app_logger.info("Daily g4f upgrade added to the scheduler")
+    app_logger.info("Starting Flask app on host='0.0.0.0', port=8080")
+    scheduler.start()
+    app.run(host="0.0.0.0", port=8080)

@@ -3,6 +3,11 @@ import csv
 from subtitles import process_output_folder
 from create_audio import create_audio_from_folder
 import rss
+import log_config
+import logging
+
+# Ottieni una referenza al logger 'app_logger'
+app_logger = logging.getLogger("app_logger")
 
 
 def download_episodes():
@@ -45,28 +50,28 @@ def download_episodes():
             }
 
         try:
-            print(
+            app_logger.info(
                 f"Starting {( 'download' if download_audio else 'subtitle extraction' )} for channel: {channel_url}"
             )
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([channel_url])
-            print(
+            app_logger.info(
                 f"{('Download' if download_audio else 'Subtitle extraction')} completed for channel: {channel_url}"
             )
             process_output_folder(output_folder)
             create_audio_from_folder(output_folder)
             rss.update_feed()
         except yt_dlp.utils.DownloadError as e:
-            print(
+            app_logger.info(
                 f"{('Download' if download_audio else 'Subtitle extraction')} completed or reached the maximum limit for channel: {channel_url}"
             )
 
 
 if __name__ == "__main__":
-    print("Executing download_episodes...")
+    app_logger.info("Executing download_episodes...")
     download_episodes()
-    print("Executing process_output_folder...")
+    app_logger.info("Executing process_output_folder...")
     output_folder = "output"
     process_output_folder(output_folder)
-    print("Executing create_audio_from_folder...")
+    app_logger.info("Executing create_audio_from_folder...")
     create_audio_from_folder(output_folder)

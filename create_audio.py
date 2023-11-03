@@ -1,5 +1,10 @@
 import os
 from gtts import gTTS
+import log_config
+import logging
+
+# Ottieni una referenza al logger 'app_logger'
+app_logger = logging.getLogger("app_logger")
 
 
 def create_audio_from_folder(output_folder):
@@ -29,7 +34,7 @@ def create_audio_from_folder(output_folder):
                     os.remove(path_vtt)
 
             except Exception as e:
-                print(
+                app_logger.error(
                     f"Errore durante la conversione del file {file} in audio: {str(e)}"
                 )
 
