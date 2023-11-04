@@ -1,90 +1,99 @@
-### README.MD for "ytpod" Project
+# YTPOD: Your Personal Podcast Generator from YouTube Channels
 
----
-
-# ytpod: make youtube channel as a podcast
-
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Python Version](https://img.shields.io/badge/python-3.11-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+<p align="center">
+  <img src="your-logo-here.png" alt="Logo" width="200">
+</p>
 
 ---
 
 ## Table of Contents
-
-- [Description](#description)
+- [Overview](#overview)
 - [Features](#features)
+- [Requirements](#requirements)
 - [Installation](#installation)
-  - [Dependencies](#dependencies)
-  - [Docker](#docker)
 - [Usage](#usage)
+- [Endpoints](#endpoints)
+- [Logging](#logging)
 - [Contributing](#contributing)
+- [Credits](#credits)
 - [License](#license)
 
 ---
 
-## Description
+## Overview
+**YTPOD** is an automated Python application designed to convert YouTube channels into personal podcasts. By fetching the latest videos from specified channels, extracting audio or subtitles, and employing AI for text processing.
 
-`ytpod` is a Python application that allows you to download episodes from a YouTube channel and manage an RSS feed through a web server. The application utilizes Flask and other Python libraries to provide a smooth and functional user experience.
-
-It's still in early alpha and not intended to be used as is.
+<p align="center">
+  <img src="overview-diagram.png" alt="Overview Diagram" width="400">
+</p>
 
 ---
 
 ## Features
+- **Automated Downloads**: Fetches the latest videos from YouTube channels as per the configuration.
+- **Audio/Subtitles Extraction**: Options to extract either audio or subtitles from the videos.
+- **AI Text Processing**: Utilizes g4f for subtitle text processing to enhance grammar. Choosing language must be done editing the code.
+- **Text to Speech Conversion**: Transforms processed text to MP3 speech using gTTS.
+- **Podcast RSS Feeds**: Generates individual podcast RSS feeds for each channel linking to the MP3 files.
+- **Web Management Interface**: Additional endpoints for management, monitoring, and manual triggering of tasks.
 
-- Download episodes from a YouTube channel
-- Automatically update RSS feed
-- Integrated web server to serve files and feeds
-- Scheduled tasks for automated operations
-- Docker support
+---
+
+## Requirements
+- I made this program using python 3.11.
+- Necessary Python packages (refer to `requirements.txt`).
+
+**Key Packages**:
+- Flask: Web Framework.
+- yt-dlp: YouTube Downloads.
+- gTTS: Text to Speech Conversion.
+- g4f: GPT-3.5 Interface.
 
 ---
 
 ## Installation
-
-### Dependencies
-
-To install the required dependencies, run the following command:
-
-```bash
-pip install -r requirements.txt
-```
-
-### Docker
-
-If you prefer using Docker, you can follow the instructions in the `compose.yaml` and `Dockerfile`.
+1. Clone the repository.
+2. Install the required packages using `pip install -r requirements.txt`.
+3. Update `channel_lists.cfg` with the desired YouTube channels and settings.
+4. Configure logging and scheduling parameters in `app.py`.
 
 ---
 
 ## Usage
+1. Run `app.py` to initiate the Flask web server on port 8080.
+2. The scheduler will automatically handle the periodic downloads, processing, and feed regeneration based on the configured interval. Change on Interval must be done at code level.
 
-1. Start the web server:
+---
 
-```bash
-python app.py
-```
+## Endpoints
+- `/print_channel_list`: View configured channels.
+- `/trigger_scheduled_task`: Manually trigger processing.
+- `/view_log`: View application logs.
+- `/channel_name/feed.xml`: Access generated podcast feeds.
 
-2. To download episodes from a specific YouTube channel, run:
+---
 
-```bash
-python download_episodes_from_channel.py
-```
-
-3. To update the RSS feed:
-
-```bash
-python rss.py
-```
+## Logging
+Configured logging for tracking operations:
+- **app.log**: General application logs.
+- **flask.log**: Flask related events.
+- Log rotation is set daily, with a maximum file size of 5MB, retaining 3 backups.
 
 ---
 
 ## Contributing
+Feel free to contribute to this project by opening issues or submitting pull requests.
 
-If you wish to contribute to the project, feel free to open a Pull Request or report issues through GitHub's "Issues" section.
+---
+
+## Credits
+This project is empowered by the following open-source libraries:
+- [Flask](https://flask.palletsprojects.com/): Web Framework.
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp): YouTube Downloads.
+- [gTTS](https://gtts.readthedocs.io/): Text to Speech Conversion.
+- [g4f](https://github.com/xtekky/gpt4free): GPT-3 Interface.
 
 ---
 
 ## License
-
-This project is distributed under the MIT License. For more details, please refer to the `LICENSE` file.
+YTPOD is open-source and available under the [MIT License](LICENSE).
