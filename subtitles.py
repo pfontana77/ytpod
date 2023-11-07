@@ -3,7 +3,7 @@ import os
 import g4f
 import time
 import logging
-import log_config
+from proxy import use_proxy  # Aggiungi questa linea
 
 # Ottieni una referenza al logger 'app_logger'
 app_logger = logging.getLogger("app_logger")
@@ -38,29 +38,42 @@ def estrai_testo_da_vtt(contenuto_vtt):
     return testo_completo
 
 
-def process_text_segment(segment, prompt):
-    try:
-        app_logger.info("Funzione: process_text_segment\n")
-        app_logger.info("Variabili:\n")
-        app_logger.info(f" - prompt: {prompt}\n")
-        app_logger.info(f" - segment: {segment}\n")
+def process_text_segment(segment, prompt, proxy=None, max_attempts=5):
+    attempt = 0
+    while attempt < max_attempts:
+        try:
+            app_logger.info("Funzione: process_text_segment")
+            app_logger.info("Variabili:")
+            app_logger.info(f" - prompt: {prompt}")
+            app_logger.info(f" - segment: {segment}")
+            app_logger.info(f" - tentativo: {attempt + 1}")
 
-        full_content = prompt + segment
-        response = g4f.ChatCompletion.create(
-            # provider=g4f.Provider.Bing,
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": full_content}],
-        )
-        # Se response è una stringa, restituiscila direttamente
-        app_logger.info(f" - response: {response}\n")
-        return response
-    except Exception as e:
-        app_logger.error(
-            f"Errore durante l'elaborazione del segmento di testo: {str(e)}"
-        )
-        # Opzionalmente, potresti voler restituire un valore di default o rilanciare l'eccezione
-        return " "  # Per restituire un valore di default
-        # raise  # Per rilanciare l'eccezione
+            full_content = prompt + segment
+            proxy_to_use = proxy if proxy else use_proxy()
+            response = g4f.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": full_content}],
+                proxy=proxy_to_use,
+                timeout=120,
+            )
+
+            app_logger.info(f" - response: {response}")
+            return response
+
+        except Exception as e:
+            app_logger.error(f"Errore durante l'elaborazione del segmento di testo: {str(e)}")
+            attempt += 1  # Incrementa il contatore dei tentativi
+
+            if attempt >= max_attempts:
+                app_logger.error(f"Tutti i {max_attempts} tentativi falliti.")
+                # Opzionalmente, puoi decidere di restituire un valore di default o rilanciare l'eccezione
+                return " "  # Per restituire un valore di default
+                # raise  # Per rilanciare l'eccezione
+            else:
+                app_logger.info(f"Ritentativo {attempt + 1}/{max_attempts}")
+                # Opzionalmente, puoi decidere di attendere un po' prima di ritentare
+                time.sleep(5)  # Attesa di 5 secondi prima di riprovare
+
 
 
 def process_long_text(text, prompt, segment_size=3000):

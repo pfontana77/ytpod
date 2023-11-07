@@ -3,8 +3,8 @@ import csv
 from subtitles import process_output_folder
 from create_audio import create_audio_from_folder
 import rss
-import log_config
 import logging
+import os
 
 # Ottieni una referenza al logger 'app_logger'
 app_logger = logging.getLogger("app_logger")
@@ -18,12 +18,17 @@ def download_episodes():
         channels = [(row[0], int(row[1])) for row in reader if row]
 
     for channel_url, download_audio in channels:
+        # Estrai il nome del canale dal URL
+        channel_name = channel_url.split("@")[-1].split("/")[0]
+        # Crea il percorso della cartella di output usando il nome del canale
+        channel_output_folder = os.path.join(output_folder, channel_name)
+
         if download_audio:
             ydl_opts = {
                 "format": "bestaudio",
                 "extractaudio": True,
                 "audioformat": "mp3",
-                "outtmpl": "output/%(uploader)s/%(title)s.%(ext)s",
+                "outtmpl": os.path.join(channel_output_folder, "%(title)s.%(ext)s"),
                 "ignoreerrors": True,
                 "verbose": True,
                 "playlistend": 5,
@@ -46,7 +51,7 @@ def download_episodes():
                 "playlistend": 5,
                 "noplaylist": True,
                 "download_archive": "downloaded.txt",
-                "outtmpl": "output/%(uploader)s/%(title)s.%(ext)s",
+                "outtmpl": os.path.join(channel_output_folder, "%(title)s.%(ext)s"),
             }
 
         try:
@@ -68,10 +73,7 @@ def download_episodes():
 
 
 if __name__ == "__main__":
+    output_folder = "output"
     app_logger.info("Executing download_episodes...")
     download_episodes()
-    app_logger.info("Executing process_output_folder...")
-    output_folder = "output"
-    process_output_folder(output_folder)
-    app_logger.info("Executing create_audio_from_folder...")
-    create_audio_from_folder(output_folder)
+

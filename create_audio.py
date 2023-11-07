@@ -1,6 +1,5 @@
 import os
 from gtts import gTTS
-import log_config
 import logging
 
 # Ottieni una referenza al logger 'app_logger'
