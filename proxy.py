@@ -6,7 +6,7 @@ import logging
 # Ottieni una referenza al logger 'app_logger'
 app_logger = logging.getLogger("app_logger")
 
-def use_proxy(num_iterations=10):
+def use_proxy(num_iterations=20):
     for i in range(num_iterations):
         try:
             proxy_obj = FreeProxy(rand=True)

@@ -38,7 +38,7 @@ def estrai_testo_da_vtt(contenuto_vtt):
     return testo_completo
 
 
-def process_text_segment(segment, prompt, proxy=None, max_attempts=5):
+def process_text_segment(segment, prompt, proxy=None, max_attempts=10):
     attempt = 0
     while attempt < max_attempts:
         try:
@@ -61,7 +61,9 @@ def process_text_segment(segment, prompt, proxy=None, max_attempts=5):
             return response
 
         except Exception as e:
-            app_logger.error(f"Errore durante l'elaborazione del segmento di testo: {str(e)}")
+            app_logger.error(
+                f"Errore durante l'elaborazione del segmento di testo: {str(e)}"
+            )
             attempt += 1  # Incrementa il contatore dei tentativi
 
             if attempt >= max_attempts:
@@ -73,7 +75,6 @@ def process_text_segment(segment, prompt, proxy=None, max_attempts=5):
                 app_logger.info(f"Ritentativo {attempt + 1}/{max_attempts}")
                 # Opzionalmente, puoi decidere di attendere un po' prima di ritentare
                 time.sleep(5)  # Attesa di 5 secondi prima di riprovare
-
 
 
 def process_long_text(text, prompt, segment_size=3000):
@@ -141,19 +142,40 @@ def elabora_file_vtt(nome_file_vtt):
         app_logger.error(f"Errore nella rimozione del file {nome_file_vtt}: {e}")
 
 
+import shutil
+
+
+def clean_filename(filename):
+    """Pulisce il nome del file rimuovendo spazi e caratteri non standard."""
+    cleaned_name = re.sub(r"[^a-zA-Z0-9_.]", "_", filename)
+    return cleaned_name
+
+
 def process_output_folder(output_folder):
     app_logger.info("Funzione: processa_cartella_output")
     for root, dirs, files in os.walk(f"{output_folder}/"):
         for file in files:
-            if file.endswith(".vtt"):
-                nome_file_vtt = os.path.join(root, file)
+            # Pulisce il nome del file
+            clean_file = clean_filename(file)
+            original_file_path = os.path.join(root, file)
+            cleaned_file_path = os.path.join(root, clean_file)
+
+            # Sposta il file sovrascrivendo se esiste già
+            if original_file_path != cleaned_file_path:
+                shutil.move(original_file_path, cleaned_file_path)
+                app_logger.info(
+                    f"File rinominato e sovrascritto: {file} -> {clean_file}"
+                )
+
+            if clean_file.endswith(".vtt"):
+                nome_file_vtt = cleaned_file_path
                 nome_file_mp3 = nome_file_vtt.replace(".vtt", ".mp3")
                 if os.path.exists(nome_file_mp3):
                     app_logger.info(
-                        f"File MP3 corrispondente già esistente per {file}. Saltare l'elaborazione."
+                        f"File MP3 corrispondente già esistente per {clean_file}. Saltare l'elaborazione."
                     )
-                    continue  # Salta l'elaborazione se esiste già un file MP3 corrispondente
-                app_logger.info(f"Process file: {file}")
+                    continue
+                app_logger.info(f"Process file: {clean_file}")
                 elabora_file_vtt(nome_file_vtt)
 
 
